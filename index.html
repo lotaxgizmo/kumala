@@ -14,10 +14,18 @@
             const versions = document.querySelectorAll('.versions img');
             const dddImage = document.querySelector('.ddd img'); // Select ddd.png
             let score = 0;
-            let highScore = 0;
+            let highScore = decodeScore(localStorage.getItem('highScore')) || 0; // Load high score from localStorage
             const scoreDisplay = document.querySelector('.score');
             const highScoreDisplay = document.querySelector('.highscore');
             let inactivityTimer;
+
+            function encodeScore(score) {
+                return btoa(score.toString());
+            }
+
+            function decodeScore(encodedScore) {
+                return encodedScore ? parseInt(atob(encodedScore)) : 0;
+            }
 
             function updateScoreDisplay() {
                 scoreDisplay.textContent = `Score: $${score}`;
@@ -43,10 +51,14 @@
             function resetInactivityTimer() {
                 clearTimeout(inactivityTimer);
                 inactivityTimer = setTimeout(() => {
-                    if (score > 0) {
-                        score -= 20; // Decrement score
-                        updateScoreDisplay(); // Update display
-                    }
+                    const decrementInterval = setInterval(() => {
+                        if (score > 0) {
+                            score -= 20; // Decrement score by 20
+                            updateScoreDisplay(); // Update display
+                        } else {
+                            clearInterval(decrementInterval); // Stop decrementing when score is 0
+                        }
+                    }, 1000); // Decrement every 1 second
                 }, 1000); // Start decrement after 1 second of inactivity
             }
 
@@ -58,6 +70,7 @@
                 }, 100); // Duration of the animation
                 score += 20; // Increment score
                 highScore = Math.max(highScore, score); // Update high score
+                localStorage.setItem('highScore', encodeScore(highScore)); // Save high score to localStorage
                 updateScoreDisplay(); // Update display
                 resetInactivityTimer(); // Reset timer on button click
             });
@@ -66,12 +79,16 @@
             document.querySelector('.btn2').addEventListener('click', () => {
                 score += 20; // Increment score
                 highScore = Math.max(highScore, score); // Update high score
+                localStorage.setItem('highScore', encodeScore(highScore)); // Save high score to localStorage
                 updateScoreDisplay(); // Update display
                 resetInactivityTimer(); // Reset timer on button click
             });
 
             // Start inactivity timer
             resetInactivityTimer();
+
+            // Initial display update
+            updateScoreDisplay();
         });
     </script>
     <style>
