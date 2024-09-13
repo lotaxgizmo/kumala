@@ -14,7 +14,7 @@
             const versions = document.querySelectorAll('.versions img');
             const dddImage = document.querySelector('.ddd img'); // Select ddd.png
             let score = 0;
-            let highScore = decodeScore(localStorage.getItem('highScore')) || 0; // Load high score from localStorage
+            let highScore = 0; // Initialize high score
             const scoreDisplay = document.querySelector('.score');
             const highScoreDisplay = document.querySelector('.highscore');
             let inactivityTimer;
@@ -39,6 +39,34 @@
                 setTimeout(() => {
                     element.classList.remove('scale-animation');
                 }, 300); // Duration of the animation
+            }
+
+            async function fetchHighScore() {
+                try {
+                    const response = await fetch('http://localhost:3000/highscore');
+                    const data = await response.json();
+                    highScore = data.highScore;
+                    updateScoreDisplay();
+                } catch (error) {
+                    console.error('Error fetching high score:', error);
+                }
+            }
+
+            async function updateHighScore(newHighScore) {
+                try {
+                    const response = await fetch('http://localhost:3000/highscore', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ highScore: newHighScore })
+                    });
+                    const data = await response.json();
+                    highScore = data.highScore; // Update local high score with response
+                    updateScoreDisplay(); // Update display
+                } catch (error) {
+                    console.error('Error updating high score:', error);
+                }
             }
 
             window.toggleVersion = function () {
@@ -69,17 +97,10 @@
                     dddImage.classList.remove('animate-bob'); // Remove animation class after animation ends
                 }, 100); // Duration of the animation
                 score += 20; // Increment score
-                highScore = Math.max(highScore, score); // Update high score
-                localStorage.setItem('highScore', encodeScore(highScore)); // Save high score to localStorage
-                updateScoreDisplay(); // Update display
-                resetInactivityTimer(); // Reset timer on button click
-            });
-
-            // Add click event for btn2
-            document.querySelector('.btn2').addEventListener('click', () => {
-                score += 20; // Increment score
-                highScore = Math.max(highScore, score); // Update high score
-                localStorage.setItem('highScore', encodeScore(highScore)); // Save high score to localStorage
+                if (score > highScore) {
+                    highScore = score; // Update high score
+                    updateHighScore(highScore); // Save high score to backend
+                }
                 updateScoreDisplay(); // Update display
                 resetInactivityTimer(); // Reset timer on button click
             });
@@ -87,8 +108,8 @@
             // Start inactivity timer
             resetInactivityTimer();
 
-            // Initial display update
-            updateScoreDisplay();
+            // Fetch initial high score from backend
+            fetchHighScore();
         });
     </script>
     <style>
