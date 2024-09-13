@@ -27,6 +27,11 @@ const writeHighScore = (score) => {
 
 let highScore = readHighScore(); // Initialize high score from file
 
+// Periodically update high score from file every 5 seconds
+setInterval(() => {
+  highScore = readHighScore();
+}, 5000);
+
 app.use(bodyParser.json());
 app.use(cors()); // Enable CORS
 
