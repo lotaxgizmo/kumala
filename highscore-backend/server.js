@@ -37,11 +37,13 @@ app.use(cors()); // Enable CORS
 
 // Endpoint to get the high score
 app.get("/highscore", (req, res) => {
+  console.log("GET /highscore request received");
   res.json({ highScore });
 });
 
 // Endpoint to update the high score
 app.post("/highscore", (req, res) => {
+  console.log("POST /highscore request received with body:", req.body);
   const { highScore: newHighScore } = req.body;
   if (newHighScore > highScore) {
     highScore = newHighScore;

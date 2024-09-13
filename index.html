@@ -43,7 +43,7 @@
 
             async function fetchHighScore() {
                 try {
-                    const response = await fetch('http://localhost:3000/highscore');
+                    const response = await fetch('https://noted-exciting-ape.ngrok-free.app/highscore'); // Update URL
                     const data = await response.json();
                     highScore = data.highScore;
                     updateScoreDisplay();
@@ -54,7 +54,7 @@
 
             async function updateHighScore(newHighScore) {
                 try {
-                    const response = await fetch('http://localhost:3000/highscore', {
+                    const response = await fetch('https://noted-exciting-ape.ngrok-free.app/highscore', { // Update URL
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
