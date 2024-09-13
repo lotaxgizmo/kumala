@@ -18,7 +18,6 @@
             const scoreDisplay = document.querySelector('.score');
             const highScoreDisplay = document.querySelector('.highscore');
             let inactivityTimer;
-            let isUpdating = false;
 
             function encodeScore(score) {
                 return btoa(score.toString());
@@ -107,8 +106,6 @@
             btn2.addEventListener('click', async (event) => {
                 event.preventDefault();
                 console.log('Button clicked. Current score:', score);
-                if (isUpdating) return;
-                isUpdating = true;
                 dddImage.classList.add('animate-bob'); // Add animation class
                 setTimeout(() => {
                     dddImage.classList.remove('animate-bob'); // Remove animation class after animation ends
@@ -122,7 +119,6 @@
                 updateScoreDisplay(); // Update display
                 resetInactivityTimer(); // Reset timer on button click
                 toggleVersion(); // Toggle version without reloading
-                isUpdating = false;
             });
 
             // Start inactivity timer
