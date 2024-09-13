@@ -22,7 +22,11 @@ const readHighScore = () => {
 
 // Function to write high score to file
 const writeHighScore = (score) => {
-  fs.writeFileSync(highScoreFile, JSON.stringify({ highScore: score }));
+  try {
+    fs.writeFileSync(highScoreFile, JSON.stringify({ highScore: score }));
+  } catch (error) {
+    console.error("Error writing high score to file:", error);
+  }
 };
 
 let highScore = readHighScore(); // Initialize high score from file
@@ -32,8 +36,24 @@ setInterval(() => {
   highScore = readHighScore();
 }, 5000);
 
-app.use(bodyParser.json());
-app.use(cors()); // Enable CORS
+app.use(
+  bodyParser.json({
+    verify: (req, res, buf) => {
+      if (
+        req.method === "POST" &&
+        req.headers["content-type"] !== "application/json"
+      ) {
+        throw new Error("Invalid content-type. Expected application/json");
+      }
+    },
+  })
+);
+
+const corsOptions = {
+  origin: "http://localhost:5500", // Replace with your frontend URL
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions)); // Enable CORS
 
 // Endpoint to get the high score
 app.get("/highscore", (req, res) => {
@@ -48,9 +68,15 @@ app.post("/highscore", (req, res) => {
   if (newHighScore > highScore) {
     highScore = newHighScore;
     writeHighScore(highScore); // Persist new high score to file
-    console.log("New high score update is", highScore); // Log the new high score
+    console.log("New high score updated to", highScore);
   }
   res.json({ highScore });
+});
+
+// Log request details
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
 });
 
 app.listen(port, () => {

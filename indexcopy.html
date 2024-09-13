@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kumala Button by Gizmo</title>
+    <link rel="icon" href="./assets/favicon.ico" type="image/png">
+    <link href="https://fonts.cdnfonts.com/css/averia-sans-libre" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let currentVersion = 0;
+            const versions = document.querySelectorAll('.versions img');
+            const dddImage = document.querySelector('.ddd img'); // Select ddd.png
+            let score = 0;
+            let highScore = 0; // Initialize high score
+            const scoreDisplay = document.querySelector('.score');
+            const highScoreDisplay = document.querySelector('.highscore');
+            let inactivityTimer;
+            let isUpdating = false;
+
+            function encodeScore(score) {
+                return btoa(score.toString());
+            }
+
+            function decodeScore(encodedScore) {
+                return encodedScore ? parseInt(atob(encodedScore)) : 0;
+            }
+
+            function updateScoreDisplay() {
+                scoreDisplay.textContent = `Score: $${score}`;
+                highScoreDisplay.textContent = `Highscore: $${highScore}`;
+                animateScoreDisplay(scoreDisplay); // Animate score display
+                animateScoreDisplay(highScoreDisplay); // Animate high score display
+            }
+
+            function animateScoreDisplay(element) {
+                element.classList.add('scale-animation');
+                setTimeout(() => {
+                    element.classList.remove('scale-animation');
+                }, 300); // Duration of the animation
+            }
+
+            async function fetchHighScore() {
+                try {
+                    const response = await fetch('https://noted-exciting-ape.ngrok-free.app/highscore'); // Update URL
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+                    highScore = data.highScore;
+                    updateScoreDisplay();
+                } catch (error) {
+                    console.error('Error fetching high score:', error);
+                }
+            }
+
+            async function updateHighScore(newHighScore) {
+                try {
+                    const response = await fetch('https://noted-exciting-ape.ngrok-free.app/highscore', { // Update URL
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ highScore: newHighScore })
+                    });
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+                    if (data.highScore !== undefined) {
+                        highScore = data.highScore; // Update local high score with response
+                        updateScoreDisplay(); // Update display
+                    } else {
+                        throw new Error('Invalid response from server');
+                    }
+                } catch (error) {
+                    console.error('Error updating high score:', error);
+                    // Optionally, display an error message to the user
+                }
+            }
+
+            function toggleVersion() {
+                versions[currentVersion].classList.add('hidden');
+                currentVersion = (currentVersion + 1) % versions.length;
+                versions[currentVersion].classList.remove('hidden');
+                resetInactivityTimer(); // Reset timer on button click
+            }
+
+            function resetInactivityTimer() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(() => {
+                    const decrementInterval = setInterval(() => {
+                        if (score > 0) {
+                            score -= 20; // Decrement score by 20
+                            updateScoreDisplay(); // Update display
+                        } else {
+                            clearInterval(decrementInterval); // Stop decrementing when score is 0
+                        }
+                    }, 1000); // Decrement every 1 second
+                }, 1000); // Start decrement after 1 second of inactivity
+            }
+
+            // Add event listener for btn2
+            const btn2 = document.querySelector('.btn2');
+            btn2.addEventListener('click', async (event) => {
+                event.preventDefault();
+                console.log('Button clicked. Current score:', score);
+                if (isUpdating) return;
+                isUpdating = true;
+                dddImage.classList.add('animate-bob'); // Add animation class
+                setTimeout(() => {
+                    dddImage.classList.remove('animate-bob'); // Remove animation class after animation ends
+                }, 100); // Duration of the animation
+                score += 20; // Increment score
+                if (score > highScore) {
+                    console.log('New high score reached:', score);
+                    highScore = score; // Update high score
+                    await updateHighScore(highScore); // Save high score to backend
+                }
+                updateScoreDisplay(); // Update display
+                resetInactivityTimer(); // Reset timer on button click
+                toggleVersion(); // Toggle version without reloading
+                isUpdating = false;
+            });
+
+            // Start inactivity timer
+            resetInactivityTimer();
+
+            // Fetch initial high score from backend
+            fetchHighScore();
+
+            // Fetch high score every 5 seconds
+            setInterval(fetchHighScore, 5000);
+        });
+    </script>
+    <style>
+        /* Add bobbing animation */
+        @keyframes bob {
+            0% {
+                transform: translateX(0);
+            }
+
+            50% {
+                transform: translateX(30px);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        .animate-bob {
+            animation: bob 0.1s ease-in-out;
+            /* Fast bobbing effect */
+        }
+
+        /* Scale animation for score display */
+        @keyframes scale {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(0.97);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .scale-animation {
+            animation: scale 0.11s ease-out;
+        }
+
+        /* Apply font to body */
+        body {
+            font-family: 'Averia Sans Libre', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-[#CA74A0] flex justify-center items-center h-screen">
+    <div class="whole flex justify-center items-center">
+        <div class="outer flex flex-col justify-center items-center">
+
+            <div class="realouter relative flex justify-center items-center">
+
+                <img src="./assets/OUTER.png" alt="" class="lg:w-[520px] lg:h-[520px] w-[372px] h-[372px]" />
+
+                <div class="absolute ddd flex justify-center items-center overflow-hidden border-2f rounded-3xl">
+                    <div class="text absolute z-30 top-3 left-5 text-black">
+                        <p class="score text-white text-left text-5xl font-bold"
+                            style="text-shadow: 1px 1px 2px black;">Score: $0</p>
+                        <p class="highscore text-white text-left text-2xl font-bold"
+                            style="text-shadow: 1px 1px 2px black;">Highscore: $0</p>
+                    </div>
+                    <img src="./assets/ddd.png" alt="" class="lg:w-[200px] w-[150px] absolute -left-16 -bottom-10 z-10">
+                    <img src="./assets/version1.png" alt="" class="lg:w-[500px] w-[350px] opacity-0">
+                </div>
+
+                <div class="versions absolute flex justify-center items-center">
+                    <img src="./assets/version1.png" alt="" class="lg:w-[500px] w-[350px]">
+                    <img src="./assets/version2.png" alt="" class="lg:w-[500px] w-[350px] hidden">
+                    <img src="./assets/version3.png" alt="" class="lg:w-[500px] w-[350px] hidden">
+                    <img src="./assets/version4.png" alt="" class="lg:w-[500px] w-[350px] hidden">
+                </div>
+            </div>
+
+            <img src="./assets/BOTTOMBORDER.png" alt="" class="lg:w-[520px] w-[372px] h-auto -mt-8" />
+
+            <div class="btn flex flex-col justify-center items-center">
+                <button type="button" class="btn1 lg:-mt-28 -mt-20" style="cursor: default;">
+                    <img src="./assets/KUMALABTN.png" alt="" class="lg:w-[560px] w-[400px]" />
+                </button>
+                <button type="button"
+                    class="btn2 mt-10 transition-transform duration-200 ease-in-out hover:scale-95 active:scale-90">
+                    <img src="./assets/KUMBTN.png" alt="" class="lg:w-[520px] w-[372px]" />
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
