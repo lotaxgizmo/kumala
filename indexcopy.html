@@ -127,8 +127,15 @@
             // Fetch initial high score from backend
             fetchHighScore();
 
-            // Fetch high score every 2 seconds
-            setInterval(fetchHighScore, 2000);
+            // Update display every second
+            function updateDisplay() {
+                updateScoreDisplay();
+                fetchHighScore();
+            }
+            setInterval(updateDisplay, 1000);
+
+            // Remove this line as we're now updating more frequently
+            // setInterval(fetchHighScore, 2000);
         });
     </script>
     <style>
