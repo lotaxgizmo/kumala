@@ -1,58 +1,70 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const fs = require("fs");
+const fetch = require("node-fetch"); // Add this line
+
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
+const dbUrl = process.env.REPLIT_DB_URL;
 
-const highScoreFile = "highscore.json";
+const defaultHighScore = 100;
 
-// Function to read high score from file
-const readHighScore = () => {
-  if (fs.existsSync(highScoreFile)) {
-    const data = fs.readFileSync(highScoreFile);
-    return JSON.parse(data).highScore;
-  } else {
-    // Create the file with a default high score if it doesn't exist
-    const defaultHighScore = 100;
-    writeHighScore(defaultHighScore);
-    return defaultHighScore;
-  }
+// Function to read high score from the database
+const readHighScore = async () => {
+  const response = await fetch(`${dbUrl}/highScore`);
+  const highScore = await response.text();
+  return highScore ? parseInt(highScore, 10) : defaultHighScore;
 };
 
-// Function to write high score to file
-const writeHighScore = (score) => {
-  fs.writeFileSync(highScoreFile, JSON.stringify({ highScore: score }));
+// Function to write high score to the database
+const writeHighScore = async (score) => {
+  console.log("Writing high score to database:", score); // Debug log
+  await fetch(dbUrl, {
+    method: "POST",
+    body: `highScore=${score}`,
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  });
 };
 
-let highScore = readHighScore(); // Initialize high score from file
+let highScore;
 
-// Periodically update high score from file every 5 seconds
-setInterval(() => {
-  highScore = readHighScore();
+// Initialize high score from the database
+readHighScore().then((score) => {
+  highScore = score;
+  console.log("Initial high score from database:", highScore); // Debug log
+});
+
+// Periodically update high score from the database every 5 seconds
+setInterval(async () => {
+  highScore = await readHighScore();
+  console.log("Updated high score from database:", highScore); // Debug log
 }, 5000);
 
 app.use(bodyParser.json());
 app.use(cors()); // Enable CORS
 
 // Endpoint to get the high score
-app.get("/highscore", (req, res) => {
+app.get("/highscore", async (req, res) => {
   console.log("GET /highscore request received");
-  res.json({ highScore });
+  const currentHighScore = await readHighScore();
+  res.json({ highScore: { ok: true, value: currentHighScore } });
 });
 
 // Endpoint to update the high score
-app.post("/highscore", (req, res) => {
+app.post("/highscore", async (req, res) => {
   console.log("POST /highscore request received with body:", req.body);
-  const { highScore: newHighScore } = req.body;
-  if (newHighScore > highScore) {
-    highScore = newHighScore;
-    writeHighScore(highScore); // Persist new high score to file
-    console.log("New high score update is", highScore); // Log the new high score
+  const newHighScore = req.body.highScore;
+  const currentHighScore = await readHighScore();
+  if (newHighScore > currentHighScore) {
+    await writeHighScore(newHighScore); // Persist new high score to database
+    console.log("New high score updated to:", newHighScore);
   }
-  res.json({ highScore });
+  const updatedHighScore = await readHighScore();
+  res.json({ highScore: { ok: true, value: updatedHighScore } });
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(
+    `Server is running on ${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+  );
 });

@@ -34,11 +34,7 @@ readHighScore().then((score) => {
   console.log("Initial high score from database:", highScore); // Debug log
 });
 
-// Periodically update high score from the database every 5 seconds
-setInterval(async () => {
-  highScore = await readHighScore();
-  console.log("Updated high score from database:", highScore); // Debug log
-}, 5000);
+// Remove the periodic update
 
 app.use(bodyParser.json());
 app.use(cors()); // Enable CORS
