@@ -18,7 +18,6 @@
             const scoreDisplay = document.querySelector('.score');
             const highScoreDisplay = document.querySelector('.highscore');
             let inactivityTimer;
-            let decrementInterval;
 
             function encodeScore(score) {
                 return btoa(score.toString());
@@ -44,17 +43,13 @@
 
             async function fetchHighScore() {
                 try {
-                    const response = await fetch('https://noted-exciting-ape.ngrok-free.app/highscore'); // Update URL
-                    const contentType = response.headers.get('content-type');
+                    const response = await fetch('https://noted-exciting-ape.ngrok-free.app/highscore');
                     if (!response.ok) {
-                        throw new Error(`Network response was not ok: ${response.statusText}`);
+                        throw new Error('Network response was not ok');
                     }
-                    if (!contentType || !contentType.includes('application/json')) {
-                        const text = await response.text();
-                        console.error('Expected JSON, but received:', text);
-                        throw new TypeError('Received non-JSON response');
-                    }
-                    const data = await response.json();
+                    const text = await response.text(); // Get raw response text
+                    console.log('Raw response:', text); // Log the raw response
+                    const data = JSON.parse(text); // Parse manually
                     highScore = data.highScore;
                     updateScoreDisplay();
                 } catch (error) {
@@ -71,81 +66,61 @@
                         },
                         body: JSON.stringify({ highScore: newHighScore })
                     });
-                    const contentType = response.headers.get('content-type');
                     if (!response.ok) {
-                        throw new Error(`Network response was not ok: ${response.statusText}`);
-                    }
-                    if (!contentType || !contentType.includes('application/json')) {
-                        const text = await response.text();
-                        console.error('Expected JSON, but received:', text);
-                        throw new TypeError('Received non-JSON response');
+                        throw new Error('Network response was not ok');
                     }
                     const data = await response.json();
-                    if (data.highScore !== undefined) {
-                        highScore = data.highScore; // Update local high score with response
-                        updateScoreDisplay(); // Update display
-                    } else {
-                        throw new Error('Invalid response from server');
-                    }
+                    highScore = data.highScore; // Update local high score with response
+                    updateScoreDisplay(); // Update display
                 } catch (error) {
                     console.error('Error updating high score:', error);
-                    // Optionally, display an error message to the user
                 }
             }
 
-            function toggleVersion() {
+            window.toggleVersion = function () {
                 versions[currentVersion].classList.add('hidden');
                 currentVersion = (currentVersion + 1) % versions.length;
                 versions[currentVersion].classList.remove('hidden');
-            }
+                resetInactivityTimer(); // Reset timer on button click
+            };
 
             function resetInactivityTimer() {
                 clearTimeout(inactivityTimer);
-                clearInterval(decrementInterval);
                 inactivityTimer = setTimeout(() => {
-                    decrementInterval = setInterval(() => {
+                    const decrementInterval = setInterval(() => {
                         if (score > 0) {
                             score -= 20; // Decrement score by 20
                             updateScoreDisplay(); // Update display
-                            if (score <= 0) {
-                                clearInterval(decrementInterval); // Stop decrementing when score is 0
-                            }
+                        } else {
+                            clearInterval(decrementInterval); // Stop decrementing when score is 0
                         }
                     }, 1000); // Decrement every 1 second
                 }, 1000); // Start decrement after 1 second of inactivity
             }
 
-            // Add event listener for btn2
-            const btn2 = document.querySelector('.btn2');
-            btn2.addEventListener('click', async (event) => {
-                event.preventDefault();
-                console.log('Button clicked. Current score:', score);
+            // Add click event for btn2
+            document.querySelector('.btn2').addEventListener('click', () => {
                 dddImage.classList.add('animate-bob'); // Add animation class
                 setTimeout(() => {
                     dddImage.classList.remove('animate-bob'); // Remove animation class after animation ends
                 }, 100); // Duration of the animation
                 score += 20; // Increment score
                 if (score > highScore) {
-                    console.log('New high score reached:', score);
                     highScore = score; // Update high score
-                    await updateHighScore(highScore); // Save high score to backend
+                    updateHighScore(highScore); // Save high score to backend
                 }
                 updateScoreDisplay(); // Update display
                 resetInactivityTimer(); // Reset timer on button click
-                toggleVersion(); // Toggle version without reloading
             });
 
-            // Initial setup
-            updateScoreDisplay(); // Initialize score display
+            // Move these function calls outside of any event listeners
             fetchHighScore(); // Fetch initial high score from backend
-            resetInactivityTimer(); // Start inactivity timer
+            setInterval(fetchHighScore, 5000); // Fetch high score every 5 seconds
 
-            // Optional: If you want to remove periodic updates, comment out the following lines
-            // function updateDisplay() {
-            //     updateScoreDisplay();
-            //     fetchHighScore();
-            // }
-            // setInterval(updateDisplay, 1000);
+            // Start inactivity timer
+            resetInactivityTimer();
+
+            // ... rest of the existing code ...
         });
     </script>
     <style>
@@ -206,9 +181,11 @@
                 <div class="absolute ddd flex justify-center items-center overflow-hidden border-2f rounded-3xl">
                     <div class="text absolute z-30 top-3 left-5 text-black">
                         <p class="score text-white text-left text-5xl font-bold"
-                            style="text-shadow: 1px 1px 2px black;">Score: $0</p>
+                            style="text-shadow: 1px 1px 2px black;">Score: $0
+                        </p>
                         <p class="highscore text-white text-left text-2xl font-bold"
-                            style="text-shadow: 1px 1px 2px black;">Highscore: $0</p>
+                            style="text-shadow: 1px 1px 2px black;">
+                            Highscore: $0</p>
                     </div>
                     <img src="./assets/ddd.png" alt="" class="lg:w-[200px] w-[150px] absolute -left-16 -bottom-10 z-10">
                     <img src="./assets/version1.png" alt="" class="lg:w-[500px] w-[350px] opacity-0">
@@ -225,11 +202,11 @@
             <img src="./assets/BOTTOMBORDER.png" alt="" class="lg:w-[520px] w-[372px] h-auto -mt-8" />
 
             <div class="btn flex flex-col justify-center items-center">
-                <button type="button" class="btn1 lg:-mt-28 -mt-20" style="cursor: default;">
+                <button class="btn1 lg:-mt-28 -mt-20" style="cursor: default;">
                     <img src="./assets/KUMALABTN.png" alt="" class="lg:w-[560px] w-[400px]" />
                 </button>
-                <button type="button"
-                    class="btn2 mt-10 transition-transform duration-200 ease-in-out hover:scale-95 active:scale-90">
+                <button class="btn2 mt-10 transition-transform duration-200 ease-in-out hover:scale-95 active:scale-90"
+                    onclick="toggleVersion()">
                     <img src="./assets/KUMBTN.png" alt="" class="lg:w-[520px] w-[372px]" />
                 </button>
             </div>
