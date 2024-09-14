@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Kumala Button by Gizmo</title>
   <link rel="icon" href="./assets/favicon.ico" type="image/png">
   <link href="https://fonts.cdnfonts.com/css/averia-sans-libre" rel="stylesheet">
@@ -165,6 +165,16 @@
     /* Apply font to body */
     body {
       font-family: 'Averia Sans Libre', sans-serif;
+    }
+
+    /* Prevent text selection and touch callouts */
+    * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
   </style>
 </head>
