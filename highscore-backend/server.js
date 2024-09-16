@@ -18,7 +18,7 @@ const readHighScore = async () => {
 
 // Function to write high score to the database
 const writeHighScore = async (score) => {
-  console.log("Writing high score to database:", score); // Debug log
+  console.log("Writing score:", score); // Debug log
   await fetch(dbUrl, {
     method: "POST",
     body: `highScore=${score}`,
@@ -31,7 +31,7 @@ let highScore;
 // Initialize high score from the database
 readHighScore().then((score) => {
   highScore = score;
-  console.log("Initial high score from database:", highScore); // Debug log
+  console.log("Initial score:", highScore); // Debug log
 });
 
 // Remove the periodic update
@@ -41,19 +41,19 @@ app.use(cors()); // Enable CORS
 
 // Endpoint to get the high score
 app.get("/highscore", async (req, res) => {
-  console.log("GET /highscore request received");
+  console.log("Request received");
   const currentHighScore = await readHighScore();
   res.json({ highScore: { ok: true, value: currentHighScore } });
 });
 
 // Endpoint to update the high score
 app.post("/highscore", async (req, res) => {
-  console.log("POST /highscore request received with body:", req.body);
+  console.log("New highscore received:", req.body);
   const newHighScore = req.body.highScore;
   const currentHighScore = await readHighScore();
   if (newHighScore > currentHighScore) {
     await writeHighScore(newHighScore); // Persist new high score to database
-    console.log("New high score updated to:", newHighScore);
+    console.log("New score:", newHighScore);
   }
   const updatedHighScore = await readHighScore();
   res.json({ highScore: { ok: true, value: updatedHighScore } });
